@@ -3,6 +3,7 @@ package engine
 import (
 	"ctun1/component/dialer"
 	"ctun1/core"
+	"ctun1/core/device"
 	"ctun1/core/option"
 	"ctun1/engine/mirror"
 	"ctun1/proxy"
@@ -24,6 +25,12 @@ var (
 
 	// _defaultKey holds the default key for the engine.
 	_defaultKey *Key
+
+	// _defaultProxy holds the default proxy for the engine.
+	_defaultProxy proxy.Proxy
+
+	// _defaultDevice holds the default device for the engine.
+	_defaultDevice device.Device
 
 	// _defaultStack holds the default stack for the engine.
 	_defaultStack *stack.Stack
@@ -82,7 +89,15 @@ func start() error {
 }
 
 func stop() (err error) {
-	err = errors.New("stop err")
+	_engineMu.Lock()
+	if _defaultDevice != nil {
+		err = _defaultDevice.Close()
+	}
+	if _defaultStack != nil {
+		_defaultStack.Close()
+		_defaultStack.Wait()
+	}
+	_engineMu.Unlock()
 	return err
 }
 
